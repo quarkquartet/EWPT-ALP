@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    201012,       5503]
-NotebookOptionsPosition[    189714,       5312]
-NotebookOutlinePosition[    190119,       5328]
-CellTagsIndexPosition[    190076,       5325]
+NotebookDataLength[    200293,       5484]
+NotebookOptionsPosition[    189091,       5294]
+NotebookOutlinePosition[    189496,       5310]
+CellTagsIndexPosition[    189453,       5307]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -5196,7 +5196,7 @@ Cell[TextData[{
   FormBox["f", TraditionalForm]],
   FormatType->TraditionalForm,ExpressionUUID->
   "137f9f98-3584-4be4-bff3-c5ddd6e18042"],
- "."
+ ". Everything agrees with the previous one."
 }], "Text",ExpressionUUID->"f4d1652e-6fd0-4fa0-a93d-44dd74931fbf"]
 }, Open  ]],
 
@@ -5286,25 +5286,7 @@ Cell[BoxData[
      SubscriptBox["E", "SM"]}], 
     RowBox[{"2", " ", "\[Lambda]"}]]}], TraditionalForm]], "Output",
  CellLabel->"Out[16]=",ExpressionUUID->"3186cf32-0932-40ec-8ebc-95d2ea0997da"]
-}, Open  ]],
-
-Cell[TextData[{
- "You see the case?\nIf \[Beta] is positive, D goes to negative infinity. \
-From the above description, one can see that \[PartialD]<h>/\[PartialD]T \
-blows to negative infinity. That means the vev shift sharply for lower T. \
-This is the source why the <h>/T can be enhanced from ",
- Cell[BoxData[
-  FormBox[
-   RowBox[{
-    SubscriptBox["T", "c"], " "}], TraditionalForm]],ExpressionUUID->
-  "fc43f834-bf5a-466c-82e8-b3cbc6f609c9"],
- "to ",
- Cell[BoxData[
-  FormBox[
-   SubscriptBox["T", "n"], TraditionalForm]],ExpressionUUID->
-  "86907539-a023-431a-9f83-78567531e9de"],
- "."
-}], "Text",ExpressionUUID->"e745c434-a256-4dd0-9097-34f4f38f1155"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
@@ -5488,19 +5470,18 @@ Cell[179633, 4994, 4708, 138, 201, "Output",ExpressionUUID->"f8f36363-ded2-4679-
 Cell[184344, 5134, 352, 9, 28, "Message",ExpressionUUID->"ac72cdda-9b28-4cd8-bf9d-8b9cce5e2745"],
 Cell[184699, 5145, 1404, 44, 63, "Output",ExpressionUUID->"9f49f05d-a12a-425a-b607-f8bc532c1878"]
 }, Open  ]],
-Cell[186118, 5192, 303, 7, 24, "Text",ExpressionUUID->"f4d1652e-6fd0-4fa0-a93d-44dd74931fbf"]
+Cell[186118, 5192, 344, 7, 24, "Text",ExpressionUUID->"f4d1652e-6fd0-4fa0-a93d-44dd74931fbf"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[186458, 5204, 92, 0, 37, "Subsubsection",ExpressionUUID->"655966e5-90f4-4bed-883c-812ada874a67"],
+Cell[186499, 5204, 92, 0, 37, "Subsubsection",ExpressionUUID->"655966e5-90f4-4bed-883c-812ada874a67"],
 Cell[CellGroupData[{
-Cell[186575, 5208, 607, 19, 61, "Input",ExpressionUUID->"edee7804-02b8-4783-955b-975cb38583ab"],
-Cell[187185, 5229, 696, 21, 57, "Output",ExpressionUUID->"0711688a-ebb7-4e7f-a1c8-c4d160a207e6"]
+Cell[186616, 5208, 607, 19, 61, "Input",ExpressionUUID->"edee7804-02b8-4783-955b-975cb38583ab"],
+Cell[187226, 5229, 696, 21, 57, "Output",ExpressionUUID->"0711688a-ebb7-4e7f-a1c8-c4d160a207e6"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[187918, 5255, 157, 3, 45, "Input",ExpressionUUID->"460235e7-6cc5-453b-a8b4-0f88d9cc7ac1"],
-Cell[188078, 5260, 908, 27, 63, "Output",ExpressionUUID->"3186cf32-0932-40ec-8ebc-95d2ea0997da"]
-}, Open  ]],
-Cell[189001, 5290, 661, 16, 70, "Text",ExpressionUUID->"e745c434-a256-4dd0-9097-34f4f38f1155"]
+Cell[187959, 5255, 157, 3, 45, "Input",ExpressionUUID->"460235e7-6cc5-453b-a8b4-0f88d9cc7ac1"],
+Cell[188119, 5260, 908, 27, 63, "Output",ExpressionUUID->"3186cf32-0932-40ec-8ebc-95d2ea0997da"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
