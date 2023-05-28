@@ -9,6 +9,8 @@ Convention and analytical expressions can be found in the paper.
 import numpy as np
 import numpy.linalg as la
 from cosmoTransitions import generic_potential as gp
+from finiteT import Jb_spline as Jb
+from finiteT import Jf_spline as Jf
 
 # Define constants
 # Here we use the 1-loop MSbar renormalization scheme, with renormalization scale mZ.
@@ -16,28 +18,41 @@ from cosmoTransitions import generic_potential as gp
 # Code implementation: model_setup/Zero_T_full_model.nb
 # Scalar contributions to the effective potential is included. Contribution from extra scalar (i.e. the ALP) to the renormalization of the gauge and Yukawa couplings are omitted for simplicity.
 
-mZEW = 91.1876
+mZEW = 91.1876  # observed Z-boson mass. Not to be confused with the field-dependent
+# Z boson mass term. So use this name here.
 GF = 1.1663787e-05
 v = (2**0.5 * GF) ** (-0.5)
 v2 = v**2
 mhpole = 125.13
-g1 = 0.357394
-g2 = 0.651016
-g3 = 1.21978
-yt = 0.977773
+g1 = 0.3573944734603928
+g2 = 0.6510161183564389
+yt = 0.9777726923522626
 
 
 # Define effective potential of this model. Some functions and contributions are manually implemented and overwritten.
 
 
 class model_ALP(gp.generic_potential):
-    """Effective potential of the model, and some defined functions for computation."""
+    """
+    Class of CosmoTransitions. Input parameters are the 1-loop renormalized
+    parameters (but not the directly-observed quantites such as mixing angle or mass).
+
+    Parameters include:
+    lh: Higgs quartic coupling.
+    A: Higgs-ALP coupling.
+    muHsq: Higgs mass term squared.
+    muSsq: ALP mass term squared.
+    f: scale parameter for the ALP, i.e. the "decay constant" of the axion. Could
+    be understood as the UV-completion scale.
+    beta: phase difference between the ALP mass term and the Higgs-ALP interaction term.
+
+    Effective potential of the model, and some defined functions for computation.
+    """
 
     def init(self, lh, A, muHsq, muSsq, f, beta):
         self.Ndim = 2
         self.g1 = g1
         self.g2 = g2
-        self.g3 = g3
         self.yt = yt
         self.lh = lh
         self.A = A
@@ -45,11 +60,11 @@ class model_ALP(gp.generic_potential):
         self.muSsq = muSsq
         self.f = f
         self.beta = beta
-        self.Tmax = 100
+        self.Tmax = 200
         self.renormScaleSq = mZEW**2
 
     def V0(self, X):
-        """Tree-level potential"""
+        """Tree-level potential."""
 
         # Define field variable quantities
         X = np.asanyarray(X)
@@ -60,7 +75,7 @@ class model_ALP(gp.generic_potential):
 
         # tree-level potential
         y_h = -0.5 * self.muHsq * h**2 + 0.25 * self.lh * h**4
-        y_S = -self.f**2 * self.muSsq**2 * (np.cos(S / self.f) - 1)
+        y_S = -self.f**2 * self.muSsq * (np.cos(S / self.f) - 1)
         y_hS = (
             -0.5 * self.A * self.f * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
         )
@@ -68,33 +83,9 @@ class model_ALP(gp.generic_potential):
 
         return tot
 
-    def Scalar_Matrix(self, X):
-        """Physical scalar mass matrix. Goldstone boson excluded."""
-
-        # Define field variable quantities
-        X = np.array(X)
-        assert X.shape[-1] == 2
-        h = X[..., 0]
-        S = X[..., 1]
-
-        # Physical calar Matrix Form (tree-level)
-        ScalarMatrix = np.multiply.outer(np.ones((2, 2)), 0)
-        ScalarMatrix[0, 0] = (
-            -self.A * self.f * np.sin(self.beta + S / self.f)
-            + 3 * self.lh * h**2
-            - self.muHsq
-        )
-        ScalarMatrix[1, 1] = 0.5 * (
-            self.A * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
-        ) / self.f + self.muSsq * np.cos(S / self.f)
-        ScalarMatrix[0, 1] = -self.A * h * np.cos(self.beta + S / self.f)
-        ScalarMatrix[1, 0] = -self.A * h * np.cos(self.beta + S / self.f)
-
-        return ScalarMatrix
-
     def boson_massSq(self, X, T):
         """
-        Method of CosmoTransition. Returns bosons mass square, dof and constants. The scalar masses are the eigenvalues of the full physical scalar matrix, plus the Nambu-Goldstone bosons.
+        Method of CosmoTransitions. Returns bosons mass square, dof and constants. The scalar masses are the eigenvalues of the full physical scalar matrix, plus the Nambu-Goldstone bosons.
         """
 
         X = np.array(X)
@@ -104,25 +95,41 @@ class model_ALP(gp.generic_potential):
         h = X[..., 0]
         S = X[..., 1]
 
-        ScalarMatrix = self.Scalar_Matrix(X)
-        ScalarMatrix[0, 0] += (
-            3 * self.g2**2 / 16 + self.g1**2 / 16 + 0.5 * self.lh + 0.25 * self.yt
-        ) * T2
-
-        ScalarMatrix = np.rollaxis(ScalarMatrix, 0, len(ScalarMatrix.shape))
-        mSsq = la.eigvalsh(ScalarMatrix)[0]
-        mhsq = la.eigvalsh(ScalarMatrix)[1]
-
         mgs = (
             self.lh * h**2
             - self.muHsq
             - self.A * self.f * np.sin(S / self.f + self.beta)
         ) + (
-            3 * self.g2**2 / 16 + self.g1**2 / 16 + 0.5 * self.lh + 0.25 * self.yt
+            3 * self.g2**2 / 16
+            + self.g1**2 / 16
+            + 0.5 * self.lh
+            + 0.25 * self.yt**2
         ) * T2
 
+        # Scalar mass matrix ((a,c),(c,b))
+        aterm = (
+            3 * self.lh * h**2
+            - self.muHsq
+            - self.A * self.f * np.sin(S / self.f + self.beta)
+        ) + (
+            3 * self.g2**2 / 16
+            + self.g1**2 / 16
+            + 0.5 * self.lh
+            + 0.25 * self.yt**2
+        ) * T2
+
+        cterm = -self.A * h * np.cos(S / self.f + self.beta)
+
+        bterm = 0.5 * (
+            self.A * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
+        ) / self.f + self.muSsq * np.cos(S / self.f)
+
+        # Scalar eigenvalues
+        mhsq = 0.5 * (aterm + bterm + np.sqrt((aterm - bterm) ** 2 + 4 * cterm**2))
+        mSsq = 0.5 * (aterm + bterm - np.sqrt((aterm - bterm) ** 2 + 4 * cterm**2))
+
         mW = 0.25 * self.g2**2 * h**2
-        mWL = mW + 11 * self.g2**2 * T2 / 11
+        mWL = mW + 11 * self.g2**2 * T2 / 6
         mZ = 0.25 * (self.g2**2 + self.g1**2) * h**2
 
         AZsq = np.sqrt(
@@ -143,13 +150,13 @@ class model_ALP(gp.generic_potential):
 
     def fermion_massSq(self, X):
         """
-        Method of CosmoTransition. Fermion mass square. Only top quark is included.
+        Method of CosmoTransitions. Fermion mass square. Only top quark is included.
         """
 
         X = np.array(X)
         h = X[..., 0]
 
-        mt = 0.5 * self.yt * h**2
+        mt = 0.5 * self.yt**2 * h**2
         Mf = np.array([mt])
         Mf = np.rollaxis(Mf, 0, len(Mf.shape))
 
@@ -159,7 +166,7 @@ class model_ALP(gp.generic_potential):
 
     def V1(self, bosons, fermions, scale=mZEW):
         """
-        Method of CosmoTransition. Overwritten.
+        Method of CosmoTransitions. Overwritten.
 
         The 1-loop CW correction at the zero-temperature in the
         MS-bar renormalization scheme.
@@ -174,6 +181,10 @@ class model_ALP(gp.generic_potential):
         return y.real / (64 * np.pi * np.pi)
 
     def V0T(self, X):
+        """
+        1-loop corrected effective potential at T=0.
+        Not an intrinsic method of CosmoTransitions.
+        """
         X = np.asanyarray(X, dtype=float)
 
         bosons = self.boson_massSq(X, 0)
@@ -183,3 +194,46 @@ class model_ALP(gp.generic_potential):
         y += self.V1(bosons, fermions)
 
         return y
+
+    def V1T(self, bosons, fermions, T, include_radiation=True):
+        """
+        Method of CosmoTransitions. Should be overwritten.
+        The 1-loop finite-temperature correction term.
+
+        `Jf` and `Jb` are modified functions.
+
+        TODO: understand this again, write note, and implement it.
+        """
+
+        T2 = (T * T) + 1e-100
+        T4 = T2 * T2
+
+        m2, nb, _ = bosons
+        y = np.sum(nb * Jb(m2 / T2), axis=-1)
+        m2, nf = fermions
+        y += np.sum(nf * Jf(m2 / T2), axis=-1)
+
+        return y * T4 / (2 * np.pi * np.pi)
+
+    def Vtot(self, X, T, include_radiation=True):
+        """
+        Method of CosmoTransitions.
+        The total finite temperature effective potential.
+        """
+
+        T = np.asanyarray(T, dtype=float)
+        X = np.asanyarray(X, dtype=float)
+        assert X.shape[-1] == 2
+
+        bosons = self.boson_massSq(X, T)
+        fermions = self.fermion_massSq(X)
+        Vtot = self.V0(X)
+        Vtot += self.V1(bosons, fermions)
+        Vtot += self.V1T(bosons, fermions, T, include_radiation)
+
+        return Vtot
+
+    def approxZeroTMin(self):
+        # There are generically two minima at zero temperature in this model,
+        # and we want to include both of them.
+        return [np.array([v, 0]), np.array([-v, 0])]
