@@ -9,8 +9,10 @@ Convention and analytical expressions can be found in the paper.
 import numpy as np
 import numpy.linalg as la
 from cosmoTransitions import generic_potential as gp
+from cosmoTransitions import pathDeformation as pd
 from finiteT import Jb_spline as Jb
 from finiteT import Jf_spline as Jf
+from scipy import interpolate
 
 # Define constants
 # Here we use the 1-loop MSbar renormalization scheme, with renormalization scale mZ.
@@ -49,11 +51,13 @@ class model_ALP(gp.generic_potential):
     Effective potential of the model, and some defined functions for computation.
     """
 
-    def init(self, lh, A, muHsq, muSsq, f, beta):
+    def init(self, mS, sintheta, lh, A, muHsq, muSsq, f, beta):
         self.Ndim = 2
         self.g1 = g1
         self.g2 = g2
         self.yt = yt
+        self.mS = mS
+        self.sintheta = sintheta
         self.lh = lh
         self.A = A
         self.muHsq = muHsq
@@ -62,6 +66,9 @@ class model_ALP(gp.generic_potential):
         self.beta = beta
         self.Tmax = 200
         self.renormScaleSq = mZEW**2
+        self.Tc = None
+        self.action_trace_data = None
+        self.ST_func_interpolation = None
 
     def V0(self, X):
         """Tree-level potential."""
@@ -234,6 +241,94 @@ class model_ALP(gp.generic_potential):
         return Vtot
 
     def approxZeroTMin(self):
-        # There are generically two minima at zero temperature in this model,
-        # and we want to include both of them.
+        """
+        There are generically two minima at zero temperature in this model,
+        and we want to include both of them.
+        """
         return [np.array([v, 0]), np.array([-v, 0])]
+
+    def getTc(self):
+        """
+        Find the critical temperature, using the built-in `getPhases` function
+        of cosmoTransitions.
+        """
+        if self.Tc == None:
+            self.calcTcTrans()
+        self.Tc = self.TcTrans[0]["Tcrit"]
+
+    def tunneling_at_T(self, T):
+        """
+        Solve the bounce equation for the transition from the false vacuum to the true vacuum,
+        at a given temperature T.
+        Called the function `pathDeformation.fullTunneling()` in CosmoTransitions.
+        Returns the bounce solution, including the bubble profile and the action.
+        """
+
+        if self.Tc == None:
+            self.getTc()
+
+        assert T < self.Tc
+
+        def V_(x, T=T, V=self.Vtot):
+            return V(x, T)
+
+        def dV_(x, T=T, dV=self.gradV):
+            return dV(x, T)
+
+        false_vev = self.TcTrans[0]["high_vev"].tolist()
+        true_vev = self.TcTrans[0]["low_vev"].tolist()
+
+        tobj = pd.fullTunneling([true_vev, false_vev], V_, dV_)
+
+        return tobj
+
+    def S_over_T_sol(self, T):
+        """
+        The S_3/T at a given temperature T.
+        Directly call the function to solve the bounce equation to get it.
+        """
+        Tv = T
+        ST = self.tunneling_at_T(T=Tv).action / Tv
+        return ST
+
+    def trace_action(self):
+        """
+        Trace the evolution of the 3d Euclidean action S_3/T as temperature cooling down.
+        This function did 2 things:
+            - store the traced data in self.action_trace_data.
+            - Interpolate the action S_3/T as a function of T, store in self.ST_func_interpolation.
+        """
+        if self.TcTrans == None:
+            self.getTc()
+        if self.mS <= 1:
+            Tmax = self.Tc - 0.02
+        elif self.mS <= 0.05:
+            Tmax = self.Tc - 0.05
+        else:
+            Tmax = self.Tc - 0.01
+        eps = 0.002
+        list = []
+        for i in range(0, 1000):
+            Ttest = Tmax - i * eps
+            print("Tunneling at T=" + str(Ttest))
+            trigger = self.S_over_T(Ttest)
+            print("S3/T = " + str(trigger))
+            list.append([Ttest, trigger])
+            if trigger < 140.0:
+                break
+        Tmin = Ttest
+        print("Tnuc should be within " + str(Tmin) + " and " + str(Tmin + eps))
+        self.action_trace_data = np.array(list).transpose().tolist()
+        Tlist = self.action_trace_data[0]
+        log_action_list = [np.log10(i) for i in self.action_trace_data[1]]
+        y = interpolate.interp1d(Tlist, log_action_list, kind="cubic")
+        self.ST_func_interpolation = y
+
+    def S_over_T_smooth(self, T):
+        """
+        The 3d Euclidean action at a given temperature T.
+        Interpolated from the traced data.
+        """
+        if self.ST_func_interpolation == None:
+            self.trace_action()
+        return self.ST_func_interpolation(T)
