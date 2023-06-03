@@ -7,12 +7,12 @@ Convention and analytical expressions can be found in the paper.
 """
 
 import numpy as np
-import numpy.linalg as la
 from cosmoTransitions import generic_potential as gp
 from cosmoTransitions import pathDeformation as pd
 from finiteT import Jb_spline as Jb
 from finiteT import Jf_spline as Jf
 from scipy import interpolate
+from scipy import optimize
 
 # Define constants
 # Here we use the 1-loop MSbar renormalization scheme, with renormalization scale mZ.
@@ -68,7 +68,7 @@ class model_ALP(gp.generic_potential):
         self.renormScaleSq = mZEW**2
         self.Tc = None
         self.action_trace_data = None
-        self.ST_func_interpolation = None
+        self.Tn = None
 
     def V0(self, X):
         """Tree-level potential."""
@@ -240,6 +240,11 @@ class model_ALP(gp.generic_potential):
 
         return Vtot
 
+    """
+    So far we have computed the finite temperature effective potential.
+    Move on to compute the relevant quantities in during the phase transition.
+    """
+
     def approxZeroTMin(self):
         """
         There are generically two minima at zero temperature in this model,
@@ -252,19 +257,49 @@ class model_ALP(gp.generic_potential):
         Find the critical temperature, using the built-in `getPhases` function
         of cosmoTransitions.
         """
-        if self.Tc == None:
+        if self.Tc is None:
             self.calcTcTrans()
         self.Tc = self.TcTrans[0]["Tcrit"]
 
+    def true_vev(self, T):
+        if self.phases is None:
+            self.getPhases()
+        true_vev_index = 0
+        for i in self.phases:
+            if self.phases[i].X[0][0] > 200:
+                true_vev_index = i
+        true_vev_h = self.phases[true_vev_index].X[..., 0]
+        true_vev_S = self.phases[true_vev_index].X[..., 1]
+        true_vev_T = self.phases[true_vev_index].T
+        hfunc = interpolate.interp1d(true_vev_T, true_vev_h, kind="cubic")
+        Sfunc = interpolate.interp1d(true_vev_T, true_vev_S, kind="cubic")
+        return np.array([hfunc(T), Sfunc(T)])
+
+    def false_vev(self, T):
+        if self.phases is None:
+            self.getPhases()
+        false_vev_index = 0
+        for i in self.phases:
+            if self.phases[i].X[0][0] < 1:
+                false_vev_index = i
+        false_vev_h = self.phases[false_vev_index].X[..., 0]
+        false_vev_S = self.phases[false_vev_index].X[..., 1]
+        false_vev_T = self.phases[false_vev_index].T
+        hfunc = interpolate.interp1d(false_vev_T, false_vev_h, kind="cubic")
+        Sfunc = interpolate.interp1d(false_vev_T, false_vev_S, kind="cubic")
+        return np.array([hfunc(T), Sfunc(T)])
+
     def tunneling_at_T(self, T):
         """
-        Solve the bounce equation for the transition from the false vacuum to the true vacuum,
-        at a given temperature T.
-        Called the function `pathDeformation.fullTunneling()` in CosmoTransitions.
-        Returns the bounce solution, including the bubble profile and the action.
+        Solve the bounce equation for the transition from the false vacuum
+        to the true vacuum, at a given temperature T.
+        Called the function `pathDeformation.fullTunneling()`
+        in CosmoTransitions.
+        Returns the bounce solution, including the bubble profile
+        and the action.
         """
 
-        if self.Tc == None:
+        if self.Tc is None:
             self.getTc()
 
         assert T < self.Tc
@@ -293,10 +328,9 @@ class model_ALP(gp.generic_potential):
 
     def trace_action(self):
         """
-        Trace the evolution of the 3d Euclidean action S_3/T as temperature cooling down.
-        This function did 2 things:
-            - store the traced data in self.action_trace_data.
-            - Interpolate the action S_3/T as a function of T, store in self.ST_func_interpolation.
+        Trace the evolution of the 3d Euclidean action S_3/T as temperature
+        cooling down.
+        Stores in self.action_trace_data.
         """
         if self.TcTrans == None:
             self.getTc()
@@ -311,7 +345,7 @@ class model_ALP(gp.generic_potential):
         for i in range(0, 1000):
             Ttest = Tmax - i * eps
             print("Tunneling at T=" + str(Ttest))
-            trigger = self.S_over_T(Ttest)
+            trigger = self.S_over_T_sol(Ttest)
             print("S3/T = " + str(trigger))
             list.append([Ttest, trigger])
             if trigger < 140.0:
@@ -319,16 +353,96 @@ class model_ALP(gp.generic_potential):
         Tmin = Ttest
         print("Tnuc should be within " + str(Tmin) + " and " + str(Tmin + eps))
         self.action_trace_data = np.array(list).transpose().tolist()
-        Tlist = self.action_trace_data[0]
-        log_action_list = [np.log10(i) for i in self.action_trace_data[1]]
-        y = interpolate.interp1d(Tlist, log_action_list, kind="cubic")
-        self.ST_func_interpolation = y
 
     def S_over_T_smooth(self, T):
         """
         The 3d Euclidean action at a given temperature T.
         Interpolated from the traced data.
         """
-        if self.ST_func_interpolation == None:
+        if self.action_trace_data is None:
+            print("No data to be used for interpolation. Tracing data...")
             self.trace_action()
-        return self.ST_func_interpolation(T)
+        Tlist = self.action_trace_data[0]
+        log_action_list = [np.log10(i) for i in self.action_trace_data[1]]
+        y = interpolate.interp1d(Tlist, log_action_list, kind="cubic")
+        return 10 ** y(T)
+
+    def find_Tn(self):
+        if self.action_trace_data is None:
+            print("Tracing action data...")
+            self.trace_action()
+
+        def trigger(T):
+            return np.log10(self.S_over_T_smooth(T)) - np.log10(140.0)
+
+        self.Tn = optimize.brentq(
+            trigger,
+            self.action_trace_data[0][-2],
+            self.action_trace_data[0][-1],
+            disp=False,
+            xtol=1e-5,
+            rtol=1e-6,
+        )
+        print("Tnuc = " + str(self.Tn))
+
+    def strength_Tn(self):
+        if not self.Tn:
+            self.findTn()
+        Tnuc = self.Tn
+        truevev_h = self.true_vev(Tnuc)[0]
+        return truevev_h / Tnuc
+
+    def beta_over_H(self):
+        """
+        Compute the \beta/H quantity at Tn,
+        defined as Tn * (d(S_3/T)/dT).
+        Use Ridders algorithm.
+        """
+        if self.Tn is None:
+            self.find_Tn()
+        Tnuc = self.Tn
+        if self.action_trace_data is None:
+            self.trace_action()
+        eps = 0.5 * (Tnuc - self.action_trace_data[0][-1]) * 0.9
+        dev = (
+            self.S_over_T_smooth(Tnuc - 2.0 * eps)
+            - 8.0 * self.S_over_T_smooth(Tnuc - eps)
+            + 8.0 * self.S_over_T_smooth(Tnuc + eps)
+            - self.S_over_T_smooth(Tnuc + 2.0 * eps)
+        ) / (12.0 * eps)
+        return dev * Tnuc
+
+    def alpha(self):
+        """
+        Compute the \alpha quantity at Tn.
+        """
+        if not self.Tn:
+            self.find_Tn()
+        Tnuc = self.Tn
+        if self.Tc - Tnuc >= 0.002:
+            eps = 0.001
+        else:
+            eps = 0.0001
+
+        def deltaV(T):
+            falsev = self.false_vev(T)
+            truev = self.true_vev(T)
+            return self.Vtot(falsev, T) - self.Vtot(truev, T)
+
+        dev = (
+            deltaV(Tnuc - 2 * eps)
+            - 8.0 * deltaV(Tnuc - eps)
+            + 8.0 * deltaV(Tnuc + eps)
+            - deltaV(Tnuc + 2.0 * eps)
+        ) / (
+            12.0 * eps
+        )  # derivative of deltaV w.r.t T at Tn
+        latent = deltaV(Tnuc) - 0.25 * Tnuc * dev
+        rho_crit = np.pi**2 * 106.75 * Tnuc**4 / 30.0
+        return latent / rho_crit
+
+    """
+    So far we finished computing everything.
+    But for comparison, we need to compute the `1d` phase
+    transition quantities.
+    """
