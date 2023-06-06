@@ -81,7 +81,10 @@ class model_ALP(gp.generic_potential):
         S = X[..., 1]
 
         # tree-level potential
-        y_h = -0.5 * self.muHsq * h**2 + 0.25 * self.lh * h**4
+        y_h = (
+            -0.5 * (self.muHsq - self.A * self.f * np.sin(self.beta)) * h**2
+            + 0.25 * self.lh * h**4
+        )
         y_S = -self.f**2 * self.muSsq * (np.cos(S / self.f) - 1)
         y_hS = (
             -0.5 * self.A * self.f * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
@@ -106,6 +109,7 @@ class model_ALP(gp.generic_potential):
             self.lh * h**2
             - self.muHsq
             - self.A * self.f * np.sin(S / self.f + self.beta)
+            + self.A * self.f * np.sin(self.beta)
         ) + (
             3 * self.g2**2 / 16
             + self.g1**2 / 16
@@ -118,6 +122,7 @@ class model_ALP(gp.generic_potential):
             3 * self.lh * h**2
             - self.muHsq
             - self.A * self.f * np.sin(S / self.f + self.beta)
+            + self.A * self.f * np.sin(self.beta)
         ) + (
             3 * self.g2**2 / 16
             + self.g1**2 / 16
