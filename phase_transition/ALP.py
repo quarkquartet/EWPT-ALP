@@ -6,13 +6,15 @@ Python package "cosmoTransitions" is used.
 Convention and analytical expressions can be found in the paper.
 """
 
+from collections import namedtuple
+
 import numpy as np
 from cosmoTransitions import generic_potential as gp
 from cosmoTransitions import pathDeformation as pd
+from cosmoTransitions.tunneling1D import SingleFieldInstanton
 from finiteT import Jb_spline as Jb
 from finiteT import Jf_spline as Jf
-from scipy import interpolate
-from scipy import optimize
+from scipy import interpolate, optimize
 
 # Define constants
 # Here we use the 1-loop MSbar renormalization scheme, with renormalization scale mZ.
@@ -32,8 +34,6 @@ yt = 0.9777726923522626
 
 
 # Define effective potential of this model. Some functions and contributions are manually implemented and overwritten.
-
-
 class model_ALP(gp.generic_potential):
     """
     Class of CosmoTransitions. Input parameters are the 1-loop renormalized
@@ -69,6 +69,8 @@ class model_ALP(gp.generic_potential):
         self.Tc = None
         self.action_trace_data = None
         self.Tn = None
+        self.action_trace_data_1d = None
+        self.Tn1d = None
 
     def V0(self, X):
         """Tree-level potential."""
@@ -95,7 +97,10 @@ class model_ALP(gp.generic_potential):
 
     def boson_massSq(self, X, T):
         """
-        Method of CosmoTransitions. Returns bosons mass square, dof and constants. The scalar masses are the eigenvalues of the full physical scalar matrix, plus the Nambu-Goldstone bosons.
+        Method of CosmoTransitions.
+        Returns bosons mass square, dof and constants.
+        The scalar masses are the eigenvalues of the full physical
+        scalar matrix, plus the Nambu-Goldstone bosons.
         """
 
         X = np.array(X)
@@ -337,12 +342,13 @@ class model_ALP(gp.generic_potential):
         cooling down.
         Stores in self.action_trace_data.
         """
-        if self.TcTrans == None:
+        if self.TcTrans is None:
             self.getTc()
-        if self.mS <= 1:
-            Tmax = self.Tc - 0.02
-        elif self.mS <= 0.05:
+
+        if self.mS <= 0.05:
             Tmax = self.Tc - 0.05
+        elif self.mS <= 1:
+            Tmax = self.Tc - 0.02
         else:
             Tmax = self.Tc - 0.01
         eps = 0.002
@@ -451,3 +457,115 @@ class model_ALP(gp.generic_potential):
     But for comparison, we need to compute the `1d` phase
     transition quantities.
     """
+
+    def Vmin(self, h, T):
+        T2 = T**2
+        # Write down the high-T expanded one as the initial guess.
+        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.cos(self.beta)
+        den = 6 * self.f * self.muSsq + self.A * (
+            3 * (h**2 - 2 * v**2) + T2
+        ) * np.sin(self.beta)
+        highT_path = self.f * num / den
+        y = optimize.minimize(
+            self.Vtot,
+            x0=np.array([h, highT_path]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[(h, h), (-self.f * np.pi, self.f * np.pi)],
+        ).fun
+        return y
+
+    def tunneling_at_T_1d(self, T):
+        # interpolate at first
+        if self.Tc is None:
+            self.getTc()
+        assert T < self.Tc
+        h_range = np.linspace(-300, 300, 200)
+        V_range = np.array([self.Vmin(i, T) for i in h_range])
+        V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
+        gradV1d = V1dinter.derivative()
+        tv = self.true_vev(T)[0]
+        fv = self.false_vev(T)[0]
+        tobj = SingleFieldInstanton(tv, fv, V1dinter, gradV1d)
+        profile1d = tobj.findProfile()
+        action = tobj.findAction(profile1d)
+        rtuple = namedtuple("Tunneling_1d_rval", "profile Phi action")
+        return rtuple(profile1d, profile1d.Phi, action)
+
+    def S_over_T_sol_1d(self, T):
+        Tv = T
+        ST = self.tunneling_at_T_1d(T=Tv).action / Tv
+        return ST
+
+    def trace_action_1d(self):
+        if self.Tc is None:
+            self.getTc()
+        if self.mS <= 0.05:
+            Tmax = self.Tc - 0.05
+        elif self.mS <= 1:
+            Tmax = self.Tc - 0.02
+        else:
+            Tmax = self.Tc - 0.01
+        eps = 0.01
+        list = []
+        for i in range(0, 1000):
+            Ttest = Tmax - i * eps
+            print("Tunneling at T = " + str(Ttest))
+            trigger = self.S_over_T_sol_1d(Ttest)
+            print("S3/T = " + str(trigger))
+            list.append([Ttest, trigger])
+            if trigger < 140.0:
+                break
+        Tmin = Ttest
+        print(
+            "Tnuc in 1d solution should be within "
+            + str(Tmin)
+            + " and "
+            + str(Tmin + eps)
+        )
+        self.action_trace_data_1d = np.array(list).transpose().tolist()
+
+    def S_over_T_smooth_1d(self, T):
+        if self.action_trace_data_1d is None:
+            print("Tracing action data...")
+            self.trace_action_1d()
+        Tlist = self.action_trace_data_1d[0]
+        log_action_list = [np.log10(i) for i in self.action_trace_data_1d[1]]
+        y = interpolate.interp1d(Tlist, log_action_list, kind="cubic")
+        return 10 ** y(T)
+
+    def find_Tn_1d(self):
+        if self.action_trace_data_1d is None:
+            print("Tracing action data...")
+            self.trace_action_1d()
+
+        def trigger(T):
+            return np.log10(self.S_over_T_smooth_1d(T)) - np.log10(140.0)
+
+        self.Tn1d = optimize.brentq(
+            trigger,
+            self.action_trace_data_1d[0][-2],
+            self.action_trace_data_1d[0][-1],
+            disp=False,
+        )
+        print("Tnuc = " + str(self.Tn1d))
+
+    def strength_Tn_1d(self):
+        if self.Tn1d is None:
+            self.find_Tn_1d()
+        Tnuc = self.Tn1d
+        truevev_h = self.true_vev(Tnuc)[0]
+        return truevev_h / Tnuc
+
+    def beta_over_H_1d(self):
+        if self.Tn1d is None:
+            self.find_Tn_1d()
+        Tnuc = self.Tn1d
+        eps = 0.5 * (Tnuc - self.action_trace_data_1d[0][-1]) * 0.9
+        dev = (
+            self.S_over_T_smooth_1d(Tnuc - 2.0 * eps)
+            - 8.0 * self.S_over_T_smooth_1d(Tnuc - eps)
+            + 8.0 * self.S_over_T_smooth_1d(Tnuc + eps)
+            - self.S_over_T_smooth_1d(Tnuc + 2.0 * eps)
+        ) / (12.0 * eps)
+        return dev * Tnuc
