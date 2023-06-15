@@ -33,7 +33,6 @@ g2 = 0.6510161183564389
 yt = 0.9777726923522626
 
 
-# Define effective potential of this model. Some functions and contributions are manually implemented and overwritten.
 class model_ALP(gp.generic_potential):
     """
     Class of CosmoTransitions. Input parameters are the 1-loop renormalized
@@ -65,12 +64,15 @@ class model_ALP(gp.generic_potential):
         self.f = f
         self.beta = beta
         self.Tmax = 200
+        self.Tmin = 20
         self.renormScaleSq = mZEW**2
         self.Tc = None
         self.action_trace_data = None
         self.Tn = None
         self.action_trace_data_1d = None
         self.Tn1d = None
+        self.Tcvev = None
+        self.strength_Tc = None
 
     def V0(self, X):
         """Tree-level potential."""
@@ -97,10 +99,7 @@ class model_ALP(gp.generic_potential):
 
     def boson_massSq(self, X, T):
         """
-        Method of CosmoTransitions.
-        Returns bosons mass square, dof and constants.
-        The scalar masses are the eigenvalues of the full physical
-        scalar matrix, plus the Nambu-Goldstone bosons.
+        Method of CosmoTransitions. Returns bosons mass square, dof and constants. The scalar masses are the eigenvalues of the full physical scalar matrix, plus the Nambu-Goldstone bosons.
         """
 
         X = np.array(X)
@@ -255,49 +254,36 @@ class model_ALP(gp.generic_potential):
     Move on to compute the relevant quantities in during the phase transition.
     """
 
-    def approxZeroTMin(self):
-        """
-        There are generically two minima at zero temperature in this model,
-        and we want to include both of them.
-        """
-        return [np.array([v, 0]), np.array([-v, 0])]
-
     def getTc(self):
         """
         Find the critical temperature, using the built-in `getPhases` function
         of cosmoTransitions.
         """
-        if self.Tc is None:
-            self.calcTcTrans()
-        self.Tc = self.TcTrans[0]["Tcrit"]
+        num_i = 30
+        Tmax = self.Tmax
+        Tmin = self.Tmin
+        T_test = (Tmax + Tmin) * 0.5
+        print("Finding Tc...")
+        for i in range(num_i + 10):
+            h_range = np.linspace(0, 200, 200)
+            V_range = np.array([self.Vmin(i, T_test) for i in h_range])
+            V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
+            xmin = optimize.fmin(V1dinter, 60, disp=False)[0]
 
-    def true_vev(self, T):
-        if self.phases is None:
-            self.getPhases()
-        true_vev_index = 0
-        for i in self.phases:
-            if self.phases[i].X[0][0] > 200:
-                true_vev_index = i
-        true_vev_h = self.phases[true_vev_index].X[..., 0]
-        true_vev_S = self.phases[true_vev_index].X[..., 1]
-        true_vev_T = self.phases[true_vev_index].T
-        hfunc = interpolate.interp1d(true_vev_T, true_vev_h, kind="cubic")
-        Sfunc = interpolate.interp1d(true_vev_T, true_vev_S, kind="cubic")
-        return np.array([hfunc(T), Sfunc(T)])
+            if V1dinter(xmin) < V1dinter(0) and xmin > 1:
+                Tmin = T_test
+                Tnext = (Tmax + T_test) * 0.5
+                T_test = Tnext
+            else:
+                Tmax = T_test
+                Tnext = (Tmin + T_test) * 0.5
+                T_test = Tnext
+            if V1dinter(xmin) < V1dinter(0) and xmin > 1.0 and i > num_i:
+                break
 
-    def false_vev(self, T):
-        if self.phases is None:
-            self.getPhases()
-        false_vev_index = 0
-        for i in self.phases:
-            if self.phases[i].X[0][0] < 1:
-                false_vev_index = i
-        false_vev_h = self.phases[false_vev_index].X[..., 0]
-        false_vev_S = self.phases[false_vev_index].X[..., 1]
-        false_vev_T = self.phases[false_vev_index].T
-        hfunc = interpolate.interp1d(false_vev_T, false_vev_h, kind="cubic")
-        Sfunc = interpolate.interp1d(false_vev_T, false_vev_S, kind="cubic")
-        return np.array([hfunc(T), Sfunc(T)])
+            self.Tc = T_test
+            self.Tcvev = xmin
+            self.strength_Tc = xmin / T_test
 
     def tunneling_at_T(self, T):
         """
@@ -320,8 +306,27 @@ class model_ALP(gp.generic_potential):
         def dV_(x, T=T, dV=self.gradV):
             return dV(x, T)
 
-        false_vev = self.TcTrans[0]["high_vev"].tolist()
-        true_vev = self.TcTrans[0]["low_vev"].tolist()
+        false_vev_0 = self.Smin(1e-16, T)
+        true_vev_0 = self.Smin(self.Tcvev, T)
+
+        false_vev = optimize.minimize(
+            self.Vtot,
+            x0=np.array([1e-16, false_vev_0]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[(1e-16, 1e-16), (-np.pi * self.f, np.pi * self.f)],
+        ).x
+
+        true_vev = optimize.minimize(
+            self.Vtot,
+            x0=np.array([self.Tcvev, true_vev_0]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[
+                (self.Tcvev * 0.6, self.Tcvev * 1.2),
+                (-np.pi * self.f, np.pi * self.f),
+            ],
+        ).x
 
         tobj = pd.fullTunneling([true_vev, false_vev], V_, dV_)
 
@@ -342,16 +347,19 @@ class model_ALP(gp.generic_potential):
         cooling down.
         Stores in self.action_trace_data.
         """
-        if self.TcTrans is None:
-            self.getTc()
-
+        if self.Tn1d == None:
+            self.find_Tn_1d()
         if self.mS <= 0.05:
-            Tmax = self.Tc - 0.05
+            Tmax = self.Tn1d - 0.05
         elif self.mS <= 1:
-            Tmax = self.Tc - 0.02
+            Tmax = self.Tn1d - 0.01
+        elif self.mS <= 2:
+            Tmax = self.Tn1d
         else:
             Tmax = self.Tc - 0.01
+
         eps = 0.002
+
         list = []
         for i in range(0, 1000):
             Ttest = Tmax - i * eps
@@ -400,8 +408,18 @@ class model_ALP(gp.generic_potential):
         if not self.Tn:
             self.findTn()
         Tnuc = self.Tn
-        truevev_h = self.true_vev(Tnuc)[0]
-        return truevev_h / Tnuc
+        true_vev_0 = self.Smin(self.Tcvev, Tnuc)
+        true_vev = optimize.minimize(
+            self.Vtot,
+            x0=np.array([self.Tcvev, true_vev_0]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[
+                (self.Tcvev * 0.6, self.Tcvev * 1.2),
+                (-np.pi * self.f, np.pi * self.f),
+            ],
+        ).x[0]
+        return true_vev / Tnuc
 
     def beta_over_H(self):
         """
@@ -465,7 +483,7 @@ class model_ALP(gp.generic_potential):
         den = 6 * self.f * self.muSsq + self.A * (
             3 * (h**2 - 2 * v**2) + T2
         ) * np.sin(self.beta)
-        highT_path = self.f * num / den
+        highT_path = self.f * np.arctan(num / den)
         y = optimize.minimize(
             self.Vtot,
             x0=np.array([h, highT_path]),
@@ -475,17 +493,34 @@ class model_ALP(gp.generic_potential):
         ).fun
         return y
 
+    def Smin(self, h, T):
+        T2 = T**2
+        # Write down the high-T expanded one as the initial guess.
+        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.cos(self.beta)
+        den = 6 * self.f * self.muSsq + self.A * (
+            3 * (h**2 - 2 * v**2) + T2
+        ) * np.sin(self.beta)
+        highT_path = self.f * np.arctan(num / den)
+        y = optimize.minimize(
+            self.Vtot,
+            x0=np.array([h, highT_path]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[(h, h), (-self.f * np.pi, self.f * np.pi)],
+        ).x[1]
+        return y
+
     def tunneling_at_T_1d(self, T):
         # interpolate at first
         if self.Tc is None:
             self.getTc()
         assert T < self.Tc
-        h_range = np.linspace(-300, 300, 200)
+        fv = 1e-16
+        h_range = np.linspace(-1.3 * self.Tcvev, 1.3 * self.Tcvev, 200)
         V_range = np.array([self.Vmin(i, T) for i in h_range])
         V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
+        tv = optimize.fmin(V1dinter, self.Tcvev, disp=False)[0]
         gradV1d = V1dinter.derivative()
-        tv = self.true_vev(T)[0]
-        fv = self.false_vev(T)[0]
         tobj = SingleFieldInstanton(tv, fv, V1dinter, gradV1d)
         profile1d = tobj.findProfile()
         action = tobj.findAction(profile1d)
@@ -506,7 +541,7 @@ class model_ALP(gp.generic_potential):
             Tmax = self.Tc - 0.02
         else:
             Tmax = self.Tc - 0.01
-        eps = 0.01
+        eps = 0.002
         list = []
         for i in range(0, 1000):
             Ttest = Tmax - i * eps
@@ -554,8 +589,18 @@ class model_ALP(gp.generic_potential):
         if self.Tn1d is None:
             self.find_Tn_1d()
         Tnuc = self.Tn1d
-        truevev_h = self.true_vev(Tnuc)[0]
-        return truevev_h / Tnuc
+        true_vev_0 = self.Smin(self.Tcvev, Tnuc)
+        true_vev = optimize.minimize(
+            self.Vtot,
+            x0=np.array([self.Tcvev, true_vev_0]),
+            args=(T,),
+            method="Nelder-Mead",
+            bounds=[
+                (self.Tcvev * 0.6, self.Tcvev * 1.2),
+                (-np.pi * self.f, np.pi * self.f),
+            ],
+        ).x[0]
+        return true_vev / Tnuc
 
     def beta_over_H_1d(self):
         if self.Tn1d is None:
