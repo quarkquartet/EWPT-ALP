@@ -43,6 +43,6 @@ with open(output_file, "w") as f:
         strength_1d = md.strength_Tn_1d()
         strength = md.strength_Tn()
         strength_Tc = md.strength_Tc
-        data_writer.writerow(mS, sintheta, strength, strength_1d, strength_Tc)
+        data_writer.writerow([mS, sintheta, strength, strength_1d, strength_Tc])
         print("mS = " + str(mS) + ", sin theta = " + str(sintheta) + " scanning done.")
         print("PT strength: " + str(strength))
