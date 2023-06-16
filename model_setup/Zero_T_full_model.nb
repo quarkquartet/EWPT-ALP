@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    991991,      18861]
-NotebookOptionsPosition[    973985,      18559]
-NotebookOutlinePosition[    974392,      18575]
-CellTagsIndexPosition[    974349,      18572]
+NotebookDataLength[   1001627,      19114]
+NotebookOptionsPosition[    982669,      18799]
+NotebookOutlinePosition[    983076,      18815]
+CellTagsIndexPosition[    983033,      18812]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -15508,7 +15508,7 @@ pi10.csv\"\>", TraditionalForm]], "Output",
   "Out[153]=",ExpressionUUID->"25783858-1e4a-404b-8289-b5d07a872bfa"]
 }, Open  ]]
 }, Open  ]]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -18302,6 +18302,10 @@ Cell[CellGroupData[{
 
 Cell["More scans", "Subsubsection",ExpressionUUID->"0a1caea8-41ef-461f-9edd-9948a0a5b2bf"],
 
+Cell["\<\
+Here we do more parameter scans according to what kind of plot do we want.\
+\>", "Text",ExpressionUUID->"bee8a182-ae6f-4789-8131-5bc31aa96278"],
+
 Cell[BoxData[
  RowBox[{
   RowBox[{"renormalize", "[", 
@@ -18508,9 +18512,10 @@ Cell[BoxData[
        RowBox[{"{", 
         RowBox[{"mSscan", ",", "1", ",", "15", ",", "1"}], "}"}], ",", 
        RowBox[{"{", 
-        RowBox[{"ratio", ",", "0.02", ",", "0.04", ",", "0.002"}], "}"}]}], 
+        RowBox[{"ratio", ",", "0.014", ",", "0.04", ",", "0.002"}], "}"}]}], 
       "]"}], ",", "1"}], "]"}]}], ";"}]], "Input",
- CellLabel->"In[92]:=",ExpressionUUID->"1e0e8990-3317-4dba-b860-5f2882184133"],
+ CellLabel->
+  "In[176]:=",ExpressionUUID->"1e0e8990-3317-4dba-b860-5f2882184133"],
 
 Cell[BoxData[
  FormBox[
@@ -18520,12 +18525,12 @@ Cell[BoxData[
 by AccuracyGoal and PrecisionGoal but was unable to find a sufficient \
 decrease in the merit function. You may need more than \
 \\!\\(\\*FormBox[\\\"MachinePrecision\\\", TraditionalForm]\\) digits of \
-working precision to meet these tolerances.\"", 2, 92, 19, 
+working precision to meet these tolerances.\"", 2, 176, 35, 
     27808061775548958635, "Local"},
    "MessageTemplate"], TraditionalForm]], "Message", "MSG",
  CellLabel->
   "During evaluation of \
-In[92]:=",ExpressionUUID->"70fff381-1004-42f6-a0e3-376ebb0444fb"],
+In[176]:=",ExpressionUUID->"4d960e40-c64a-4047-bd70-9325d38f9595"],
 
 Cell[BoxData[
  FormBox[
@@ -18535,12 +18540,12 @@ Cell[BoxData[
 by AccuracyGoal and PrecisionGoal but was unable to find a sufficient \
 decrease in the merit function. You may need more than \
 \\!\\(\\*FormBox[\\\"MachinePrecision\\\", TraditionalForm]\\) digits of \
-working precision to meet these tolerances.\"", 2, 92, 20, 
+working precision to meet these tolerances.\"", 2, 176, 36, 
     27808061775548958635, "Local"},
    "MessageTemplate"], TraditionalForm]], "Message", "MSG",
  CellLabel->
   "During evaluation of \
-In[92]:=",ExpressionUUID->"43916964-5f00-4e13-9a77-37437d37685a"]
+In[176]:=",ExpressionUUID->"bae44bbf-7fee-4be1-ab7d-8192f656a475"]
 }, Open  ]],
 
 Cell[BoxData[
@@ -18551,7 +18556,242 @@ Cell[BoxData[
      RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
      "\"\<output/C50_beta_pi10_GeV_param.csv\>\""}], ",", 
     "C50\[ReversePrime]\[Beta]\[Pi]10\[ReversePrime]GeV"}], "]"}], 
-  ";"}]], "Input",ExpressionUUID->"f68916b5-4394-4973-9ac7-b065c2e8a4bf"]
+  ";"}]], "Input",
+ CellLabel->
+  "In[177]:=",ExpressionUUID->"f68916b5-4394-4973-9ac7-b065c2e8a4bf"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"C10\[ReversePrime]\[Beta]\[Pi]10\[ReversePrime]GeV", "=", 
+   RowBox[{"Flatten", "[", 
+    RowBox[{
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"c", "=", "10"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"sin\[Theta]", "=", 
+           RowBox[{"mSscan", "*", "ratio"}]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"\[Beta]input", "=", 
+           FractionBox["\[Pi]", "10"]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"num", "=", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\[Theta]", "->", 
+              RowBox[{"ArcSin", "[", "sin\[Theta]", "]"}]}], ",", 
+             RowBox[{"\[Beta]", "->", "\[Beta]input"}], ",", 
+             RowBox[{"mS", "->", "mSscan"}], ",", 
+             RowBox[{"mh", "->", "mhpole"}], ",", 
+             RowBox[{"v", "->", "vnum"}]}], "}"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"Atree", ",", "\[Mu]Stree", ",", "\[Lambda]tree"}], "}"}],
+            "=", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"A", ",", "\[Mu]Ssq", ",", "\[Lambda]"}], "}"}], "/.", 
+             "sol\[ReversePrime]tree"}], "/.", "num"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"fc", " ", "=", 
+           RowBox[{
+            FractionBox["Atree", "\[Mu]Stree"], 
+            SuperscriptBox[
+             RowBox[{"(", 
+              FractionBox["vnum", 
+               SqrtBox["2"]], ")"}], "2"], "\[Pi]", "*", 
+            RowBox[{"Cos", "[", "\[Beta]input", "]"}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[Lambda]msbar", ",", "Amsbar", ",", "\[Mu]hsqmsbar", ",", 
+             "\[Mu]Ssqmsbar"}], "}"}], "=", 
+           RowBox[{"renormalize", "[", 
+            RowBox[{"mSscan", ",", "sin\[Theta]", ",", "\[Beta]input", ",", 
+             RowBox[{"c", "*", "fc"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+          "mSscan"}], ",", "sin\[Theta]", ",", "\[Lambda]msbar", ",", 
+         "Amsbar", ",", "\[Mu]hsqmsbar", ",", "\[Mu]Ssqmsbar", ",", " ", 
+         RowBox[{"c", "*", "fc"}]}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"mSscan", ",", "1", ",", "15", ",", "1"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"ratio", ",", "0.01", ",", "0.03", ",", "0.002"}], "}"}]}], 
+      "]"}], ",", "1"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[102]:=",ExpressionUUID->"a368f68c-8dbb-427b-8dce-2586eb0cc540"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+     "\"\<output/C10_beta_pi10_GeV_param.csv\>\""}], ",", 
+    "C10\[ReversePrime]\[Beta]\[Pi]10\[ReversePrime]GeV"}], "]"}], 
+  ";"}]], "Input",
+ CellLabel->
+  "In[103]:=",ExpressionUUID->"20238ae3-cd5b-4932-af95-61961b581bff"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"C1\[ReversePrime]\[Beta]\[Pi]10\[ReversePrime]GeV", "=", 
+   RowBox[{"Flatten", "[", 
+    RowBox[{
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"c", "=", "1"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"sin\[Theta]", "=", 
+           RowBox[{"mSscan", "*", "ratio"}]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"\[Beta]input", "=", 
+           FractionBox["\[Pi]", "10"]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"num", "=", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\[Theta]", "->", 
+              RowBox[{"ArcSin", "[", "sin\[Theta]", "]"}]}], ",", 
+             RowBox[{"\[Beta]", "->", "\[Beta]input"}], ",", 
+             RowBox[{"mS", "->", "mSscan"}], ",", 
+             RowBox[{"mh", "->", "mhpole"}], ",", 
+             RowBox[{"v", "->", "vnum"}]}], "}"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"Atree", ",", "\[Mu]Stree", ",", "\[Lambda]tree"}], "}"}],
+            "=", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"A", ",", "\[Mu]Ssq", ",", "\[Lambda]"}], "}"}], "/.", 
+             "sol\[ReversePrime]tree"}], "/.", "num"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"fc", " ", "=", 
+           RowBox[{
+            FractionBox["Atree", "\[Mu]Stree"], 
+            SuperscriptBox[
+             RowBox[{"(", 
+              FractionBox["vnum", 
+               SqrtBox["2"]], ")"}], "2"], "\[Pi]", "*", 
+            RowBox[{"Cos", "[", "\[Beta]input", "]"}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[Lambda]msbar", ",", "Amsbar", ",", "\[Mu]hsqmsbar", ",", 
+             "\[Mu]Ssqmsbar"}], "}"}], "=", 
+           RowBox[{"renormalize", "[", 
+            RowBox[{"mSscan", ",", "sin\[Theta]", ",", "\[Beta]input", ",", 
+             RowBox[{"c", "*", "fc"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+          "mSscan"}], ",", "sin\[Theta]", ",", "\[Lambda]msbar", ",", 
+         "Amsbar", ",", "\[Mu]hsqmsbar", ",", "\[Mu]Ssqmsbar", ",", " ", 
+         RowBox[{"c", "*", "fc"}]}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"mSscan", ",", "1", ",", "15", ",", "1"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"ratio", ",", "0.008", ",", "0.03", ",", "0.002"}], "}"}]}], 
+      "]"}], ",", "1"}], "]"}]}], ";"}]], "Input",
+ CellLabel->
+  "In[104]:=",ExpressionUUID->"5c15f027-8a87-401b-b8be-e7704fe15c49"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Export", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+     "\"\<output/C1_beta_pi10_GeV_param.csv\>\""}], ",", 
+    "C1\[ReversePrime]\[Beta]\[Pi]10\[ReversePrime]GeV"}], "]"}], 
+  ";"}]], "Input",
+ CellLabel->
+  "In[106]:=",ExpressionUUID->"e4e3d83f-1bdb-41e4-8d7e-75246a356d4e"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"c", "=", "1"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"sin\[Theta]", "=", 
+   RowBox[{"0.15", "*", 
+    SuperscriptBox["10", 
+     RowBox[{"-", "3"}]]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"\[Beta]input", "=", 
+   FractionBox["\[Pi]", "10"]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"num", "=", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"\[Theta]", "->", 
+      RowBox[{"ArcSin", "[", "sin\[Theta]", "]"}]}], ",", 
+     RowBox[{"\[Beta]", "->", "\[Beta]input"}], ",", 
+     RowBox[{"mS", "->", 
+      RowBox[{"7", "*", 
+       SuperscriptBox["10", 
+        RowBox[{"-", "3"}]]}]}], ",", 
+     RowBox[{"mh", "->", "mhpole"}], ",", 
+     RowBox[{"v", "->", "vnum"}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"Atree", ",", "\[Mu]Stree", ",", "\[Lambda]tree"}], "}"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"A", ",", "\[Mu]Ssq", ",", "\[Lambda]"}], "}"}], "/.", 
+     "sol\[ReversePrime]tree"}], "/.", "num"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"fc", " ", "=", 
+   RowBox[{
+    FractionBox["Atree", "\[Mu]Stree"], 
+    SuperscriptBox[
+     RowBox[{"(", 
+      FractionBox["vnum", 
+       SqrtBox["2"]], ")"}], "2"], "\[Pi]", "*", 
+    RowBox[{"Cos", "[", "\[Beta]input", "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"{", 
+   RowBox[{
+   "\[Lambda]msbar", ",", "Amsbar", ",", "\[Mu]hsqmsbar", ",", 
+    "\[Mu]Ssqmsbar"}], "}"}], "=", 
+  RowBox[{"renormalize", "[", 
+   RowBox[{
+    RowBox[{"7", "*", 
+     SuperscriptBox["10", 
+      RowBox[{"-", "3"}]]}], ",", "sin\[Theta]", ",", "\[Beta]input", ",", 
+    RowBox[{"c", "*", "fc"}]}], "]"}]}]}], "Input",
+ CellLabel->
+  "In[149]:=",ExpressionUUID->"f21a5447-77bd-485d-9b43-e170a15b54f3"],
+
+Cell[BoxData[
+ FormBox[
+  RowBox[{"{", 
+   RowBox[{
+   "0.15079389924600664`", ",", "0.010102682017551821`", ",", 
+    "8843.543345011802`", ",", "0.00040402390911746907`"}], "}"}], 
+  TraditionalForm]], "Output",
+ CellLabel->
+  "Out[155]=",ExpressionUUID->"be5a9ce2-6dce-4069-bc57-b27d2fba92c4"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData["fc"], "Input",
+ CellLabel->
+  "In[156]:=",ExpressionUUID->"76f1da95-89e7-4042-aca8-7a86e7e1d305"],
+
+Cell[BoxData[
+ FormBox["1.6005856767564905`*^6", TraditionalForm]], "Output",
+ CellLabel->
+  "Out[156]=",ExpressionUUID->"e0838e56-d2e2-44c0-96af-feb372f98320"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
@@ -18795,9 +19035,9 @@ Cell[824906, 15493, 307, 7, 32, "Input",ExpressionUUID->"6750c273-830b-487e-8d6c
 Cell[825216, 15502, 291, 5, 33, "Output",ExpressionUUID->"25783858-1e4a-404b-8289-b5d07a872bfa"]
 }, Open  ]]
 }, Open  ]]
-}, Open  ]],
+}, Closed]],
 Cell[CellGroupData[{
-Cell[825568, 15514, 116, 0, 54, "Subsection",ExpressionUUID->"9f68f44d-7c13-418d-ae92-cf53b0d64c25"],
+Cell[825568, 15514, 116, 0, 38, "Subsection",ExpressionUUID->"9f68f44d-7c13-418d-ae92-cf53b0d64c25"],
 Cell[CellGroupData[{
 Cell[825709, 15518, 89, 0, 45, "Subsubsection",ExpressionUUID->"9b6be6f6-aaef-49f7-8d61-b4442e5ebba7"],
 Cell[825801, 15520, 3148, 102, 220, "Input",ExpressionUUID->"3c123cc0-1d54-4107-89b0-345476537fb8"]
@@ -18848,17 +19088,30 @@ Cell[963625, 18289, 330, 8, 32, "Input",ExpressionUUID->"1f193207-5770-4806-b449
 }, Open  ]],
 Cell[CellGroupData[{
 Cell[963992, 18302, 90, 0, 45, "Subsubsection",ExpressionUUID->"0a1caea8-41ef-461f-9edd-9948a0a5b2bf"],
-Cell[964085, 18304, 4944, 122, 341, "Input",ExpressionUUID->"0f3ba2f7-003f-453b-b284-d18ed3abb203"],
+Cell[964085, 18304, 153, 2, 35, "Text",ExpressionUUID->"bee8a182-ae6f-4789-8131-5bc31aa96278"],
+Cell[964241, 18308, 4944, 122, 341, "Input",ExpressionUUID->"0f3ba2f7-003f-453b-b284-d18ed3abb203"],
 Cell[CellGroupData[{
-Cell[969054, 18430, 286, 6, 45, "Input",ExpressionUUID->"466f1072-ade1-48da-95d6-2fd87b4d0163"],
-Cell[969343, 18438, 347, 9, 33, "Output",ExpressionUUID->"187558ba-400a-4284-b74c-fe0bd2fc0c5c"]
+Cell[969210, 18434, 286, 6, 45, "Input",ExpressionUUID->"466f1072-ade1-48da-95d6-2fd87b4d0163"],
+Cell[969499, 18442, 347, 9, 33, "Output",ExpressionUUID->"187558ba-400a-4284-b74c-fe0bd2fc0c5c"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[969727, 18452, 2641, 60, 299, "Input",ExpressionUUID->"1e0e8990-3317-4dba-b860-5f2882184133"],
-Cell[972371, 18514, 608, 13, 28, "Message",ExpressionUUID->"70fff381-1004-42f6-a0e3-376ebb0444fb"],
-Cell[972982, 18529, 608, 13, 28, "Message",ExpressionUUID->"43916964-5f00-4e13-9a77-37437d37685a"]
+Cell[969883, 18456, 2646, 61, 299, "Input",ExpressionUUID->"1e0e8990-3317-4dba-b860-5f2882184133"],
+Cell[972532, 18519, 610, 13, 28, "Message",ExpressionUUID->"4d960e40-c64a-4047-bd70-9325d38f9595"],
+Cell[973145, 18534, 610, 13, 28, "Message",ExpressionUUID->"bae44bbf-7fee-4be1-ab7d-8192f656a475"]
 }, Open  ]],
-Cell[973605, 18545, 328, 8, 32, "Input",ExpressionUUID->"f68916b5-4394-4973-9ac7-b065c2e8a4bf"]
+Cell[973770, 18550, 356, 10, 32, "Input",ExpressionUUID->"f68916b5-4394-4973-9ac7-b065c2e8a4bf"],
+Cell[974129, 18562, 2645, 61, 299, "Input",ExpressionUUID->"a368f68c-8dbb-427b-8dce-2586eb0cc540"],
+Cell[976777, 18625, 356, 10, 32, "Input",ExpressionUUID->"20238ae3-cd5b-4932-af95-61961b581bff"],
+Cell[977136, 18637, 2644, 61, 299, "Input",ExpressionUUID->"5c15f027-8a87-401b-b8be-e7704fe15c49"],
+Cell[979783, 18700, 354, 10, 32, "Input",ExpressionUUID->"e4e3d83f-1bdb-41e4-8d7e-75246a356d4e"],
+Cell[CellGroupData[{
+Cell[980162, 18714, 1833, 56, 217, "Input",ExpressionUUID->"f21a5447-77bd-485d-9b43-e170a15b54f3"],
+Cell[981998, 18772, 296, 8, 33, "Output",ExpressionUUID->"be5a9ce2-6dce-4069-bc57-b27d2fba92c4"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[982331, 18785, 111, 2, 32, "Input",ExpressionUUID->"76f1da95-89e7-4042-aca8-7a86e7e1d305"],
+Cell[982445, 18789, 160, 3, 37, "Output",ExpressionUUID->"e0838e56-d2e2-44c0-96af-feb372f98320"]
+}, Open  ]]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]

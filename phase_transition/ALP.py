@@ -21,11 +21,9 @@ from scipy import interpolate, optimize
 # Computation for renormalization: 1307.3536
 # Code implementation: model_setup/Zero_T_full_model.nb
 # Scalar contributions to the effective potential is included. Contribution from extra scalar (i.e. the ALP) to the renormalization of the gauge and Yukawa couplings are omitted for simplicity.
-
-mZEW = 91.1876  # observed Z-boson mass. Not to be confused with the field-dependent
-# Z boson mass term. So use this name here.
+mZEW = 91.1876
 GF = 1.1663787e-05
-v = (2**0.5 * GF) ** (-0.5)
+v = (2**0.5 * GF) ** (-0.5) / np.sqrt(2)
 v2 = v**2
 mhpole = 125.13
 g1 = 0.3573944734603928
@@ -89,10 +87,13 @@ class model_ALP(gp.generic_potential):
             -0.5 * (self.muHsq - self.A * self.f * np.sin(self.beta)) * h**2
             + 0.25 * self.lh * h**4
         )
+
         y_S = -self.f**2 * self.muSsq * (np.cos(S / self.f) - 1)
+
         y_hS = (
             -0.5 * self.A * self.f * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
         )
+
         tot = y_h + y_S + y_hS
 
         return tot
@@ -412,7 +413,7 @@ class model_ALP(gp.generic_potential):
         true_vev = optimize.minimize(
             self.Vtot,
             x0=np.array([self.Tcvev, true_vev_0]),
-            args=(T,),
+            args=(Tnuc,),
             method="Nelder-Mead",
             bounds=[
                 (self.Tcvev * 0.6, self.Tcvev * 1.2),
@@ -593,7 +594,7 @@ class model_ALP(gp.generic_potential):
         true_vev = optimize.minimize(
             self.Vtot,
             x0=np.array([self.Tcvev, true_vev_0]),
-            args=(T,),
+            args=(Tnuc,),
             method="Nelder-Mead",
             bounds=[
                 (self.Tcvev * 0.6, self.Tcvev * 1.2),

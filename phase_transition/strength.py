@@ -1,14 +1,39 @@
 import csv
 import numpy as np
 from ALP import model_ALP as model
+import sys
+import os
+
+mass_flag = sys.argv[1]
+c_value = sys.argv[2]
+beta_value = sys.argv[3]
+
+param_file_dir = "../model_setup/output/"
+output_file_dir = "./output/"
+
+
+file_name = (
+    "c" + str(int(c_value)) + "_beta_pi" + str(int(beta_value)) + "_" + str(mass_flag)
+)
+param_file_name = file_name + "_param.csv"
+output_file_name = file_name + "_out.csv"
+param_file = os.path.join(param_file_dir, param_file_name)
+output_file = os.path.join(output_file_dir, output_file_name)
+
+print(
+    "Running for f = "
+    + str(int(c_value))
+    + " f_c and beta = "
+    + str(int(beta_value))
+    + "."
+)
 
 dataset = []
-with open("../model_setup/output/C50_beta_pi10_GeV_param.csv") as csv_file:
+with open(param_file) as csv_file:
     reader = csv.reader(csv_file)
     for i in reader:
         dataset.append(i)
 
-output_file = "./output/c50_beta_pi10_GeV_out.csv"
 
 with open(output_file, "w") as f:
     data_writer = csv.writer(f)
