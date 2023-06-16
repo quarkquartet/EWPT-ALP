@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[   1001627,      19114]
-NotebookOptionsPosition[    982669,      18799]
-NotebookOutlinePosition[    983076,      18815]
-CellTagsIndexPosition[    983033,      18812]
+NotebookDataLength[   1002038,      19103]
+NotebookOptionsPosition[    983341,      18794]
+NotebookOutlinePosition[    983748,      18810]
+CellTagsIndexPosition[    983705,      18807]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -18710,88 +18710,83 @@ Cell[BoxData[
  CellLabel->
   "In[106]:=",ExpressionUUID->"e4e3d83f-1bdb-41e4-8d7e-75246a356d4e"],
 
-Cell[CellGroupData[{
-
-Cell[BoxData[{
+Cell[BoxData[
  RowBox[{
-  RowBox[{"c", "=", "1"}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"sin\[Theta]", "=", 
-   RowBox[{"0.15", "*", 
-    SuperscriptBox["10", 
-     RowBox[{"-", "3"}]]}]}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"\[Beta]input", "=", 
-   FractionBox["\[Pi]", "10"]}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"num", "=", 
-   RowBox[{"{", 
+  RowBox[{"logmS\[ReversePrime]c1\[ReversePrime]\[Beta]\[Pi]10", "=", 
+   RowBox[{"Flatten", "[", 
     RowBox[{
-     RowBox[{"\[Theta]", "->", 
-      RowBox[{"ArcSin", "[", "sin\[Theta]", "]"}]}], ",", 
-     RowBox[{"\[Beta]", "->", "\[Beta]input"}], ",", 
-     RowBox[{"mS", "->", 
-      RowBox[{"7", "*", 
-       SuperscriptBox["10", 
-        RowBox[{"-", "3"}]]}]}], ",", 
-     RowBox[{"mh", "->", "mhpole"}], ",", 
-     RowBox[{"v", "->", "vnum"}]}], "}"}]}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
-   RowBox[{"{", 
-    RowBox[{"Atree", ",", "\[Mu]Stree", ",", "\[Lambda]tree"}], "}"}], "=", 
-   RowBox[{
-    RowBox[{
-     RowBox[{"{", 
-      RowBox[{"A", ",", "\[Mu]Ssq", ",", "\[Lambda]"}], "}"}], "/.", 
-     "sol\[ReversePrime]tree"}], "/.", "num"}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"fc", " ", "=", 
-   RowBox[{
-    FractionBox["Atree", "\[Mu]Stree"], 
-    SuperscriptBox[
-     RowBox[{"(", 
-      FractionBox["vnum", 
-       SqrtBox["2"]], ")"}], "2"], "\[Pi]", "*", 
-    RowBox[{"Cos", "[", "\[Beta]input", "]"}]}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"{", 
-   RowBox[{
-   "\[Lambda]msbar", ",", "Amsbar", ",", "\[Mu]hsqmsbar", ",", 
-    "\[Mu]Ssqmsbar"}], "}"}], "=", 
-  RowBox[{"renormalize", "[", 
-   RowBox[{
-    RowBox[{"7", "*", 
-     SuperscriptBox["10", 
-      RowBox[{"-", "3"}]]}], ",", "sin\[Theta]", ",", "\[Beta]input", ",", 
-    RowBox[{"c", "*", "fc"}]}], "]"}]}]}], "Input",
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"c", "=", "1"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"mSscan", " ", "=", " ", 
+           SuperscriptBox["10", "logmS"]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"sin\[Theta]", "=", 
+           RowBox[{"mSscan", "*", "ratio"}]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"\[Beta]input", "=", 
+           FractionBox["\[Pi]", "10"]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"num", "=", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"\[Theta]", "->", 
+              RowBox[{"ArcSin", "[", "sin\[Theta]", "]"}]}], ",", 
+             RowBox[{"\[Beta]", "->", "\[Beta]input"}], ",", 
+             RowBox[{"mS", "->", "mSscan"}], ",", 
+             RowBox[{"mh", "->", "mhpole"}], ",", 
+             RowBox[{"v", "->", "vnum"}]}], "}"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"Atree", ",", "\[Mu]Stree", ",", "\[Lambda]tree"}], "}"}],
+            "=", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"A", ",", "\[Mu]Ssq", ",", "\[Lambda]"}], "}"}], "/.", 
+             "sol\[ReversePrime]tree"}], "/.", "num"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"fc", " ", "=", 
+           RowBox[{
+            FractionBox["Atree", "\[Mu]Stree"], 
+            SuperscriptBox[
+             RowBox[{"(", 
+              FractionBox["vnum", 
+               SqrtBox["2"]], ")"}], "2"], "\[Pi]", "*", 
+            RowBox[{"Cos", "[", "\[Beta]input", "]"}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[Lambda]msbar", ",", "Amsbar", ",", "\[Mu]hsqmsbar", ",", 
+             "\[Mu]Ssqmsbar"}], "}"}], "=", 
+           RowBox[{"renormalize", "[", 
+            RowBox[{"mSscan", ",", "sin\[Theta]", ",", "\[Beta]input", ",", 
+             RowBox[{"c", "*", "fc"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+          "mSscan"}], ",", "sin\[Theta]", ",", "\[Lambda]msbar", ",", 
+         "Amsbar", ",", "\[Mu]hsqmsbar", ",", "\[Mu]Ssqmsbar", ",", " ", 
+         RowBox[{"c", "*", "fc"}]}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"logmS", ",", 
+         RowBox[{"-", "2"}], ",", "1", ",", "0.2"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"ratio", ",", "0.008", ",", "0.03", ",", "0.002"}], "}"}]}], 
+      "]"}], ",", "1"}], "]"}]}], ";"}]], "Input",
  CellLabel->
-  "In[149]:=",ExpressionUUID->"f21a5447-77bd-485d-9b43-e170a15b54f3"],
+  "In[328]:=",ExpressionUUID->"92c235e4-d671-4794-8f19-cc04362a9900"],
 
 Cell[BoxData[
- FormBox[
-  RowBox[{"{", 
+ RowBox[{
+  RowBox[{"Export", "[", 
    RowBox[{
-   "0.15079389924600664`", ",", "0.010102682017551821`", ",", 
-    "8843.543345011802`", ",", "0.00040402390911746907`"}], "}"}], 
-  TraditionalForm]], "Output",
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+     "\"\<output/logmS_c1_beta_pi10_param.csv\>\""}], ",", 
+    "logmS\[ReversePrime]c1\[ReversePrime]\[Beta]\[Pi]10"}], "]"}], 
+  ";"}]], "Input",
  CellLabel->
-  "Out[155]=",ExpressionUUID->"be5a9ce2-6dce-4069-bc57-b27d2fba92c4"]
-}, Open  ]],
-
-Cell[CellGroupData[{
-
-Cell[BoxData["fc"], "Input",
- CellLabel->
-  "In[156]:=",ExpressionUUID->"76f1da95-89e7-4042-aca8-7a86e7e1d305"],
-
-Cell[BoxData[
- FormBox["1.6005856767564905`*^6", TraditionalForm]], "Output",
- CellLabel->
-  "Out[156]=",ExpressionUUID->"e0838e56-d2e2-44c0-96af-feb372f98320"]
-}, Open  ]]
+  "In[330]:=",ExpressionUUID->"f619af30-c92e-4083-b0e2-cb0a84fe0da0"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
@@ -19104,14 +19099,8 @@ Cell[974129, 18562, 2645, 61, 299, "Input",ExpressionUUID->"a368f68c-8dbb-427b-8
 Cell[976777, 18625, 356, 10, 32, "Input",ExpressionUUID->"20238ae3-cd5b-4932-af95-61961b581bff"],
 Cell[977136, 18637, 2644, 61, 299, "Input",ExpressionUUID->"5c15f027-8a87-401b-b8be-e7704fe15c49"],
 Cell[979783, 18700, 354, 10, 32, "Input",ExpressionUUID->"e4e3d83f-1bdb-41e4-8d7e-75246a356d4e"],
-Cell[CellGroupData[{
-Cell[980162, 18714, 1833, 56, 217, "Input",ExpressionUUID->"f21a5447-77bd-485d-9b43-e170a15b54f3"],
-Cell[981998, 18772, 296, 8, 33, "Output",ExpressionUUID->"be5a9ce2-6dce-4069-bc57-b27d2fba92c4"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[982331, 18785, 111, 2, 32, "Input",ExpressionUUID->"76f1da95-89e7-4042-aca8-7a86e7e1d305"],
-Cell[982445, 18789, 160, 3, 37, "Output",ExpressionUUID->"e0838e56-d2e2-44c0-96af-feb372f98320"]
-}, Open  ]]
+Cell[980140, 18712, 2788, 64, 323, "Input",ExpressionUUID->"92c235e4-d671-4794-8f19-cc04362a9900"],
+Cell[982931, 18778, 358, 10, 32, "Input",ExpressionUUID->"f619af30-c92e-4083-b0e2-cb0a84fe0da0"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
