@@ -44,33 +44,53 @@ with open(output_file, "w") as f:
         )
         md.getTc()
         print("Critical temperature: " + str(md.Tc))
-        md.find_Tn()
-        strength_1d = md.strength_Tn_1d()
-        strength = md.strength_Tn()
-        strength_Tc = md.strength_Tc
-        Tc = md.Tc
-        Tnuc = md.Tn
-        Tnuc_1d = md.Tn1d
-        beta_H = md.beta_over_H()
-        beta_H_1d = md.beta_over_H_1d()
-        data_writer.writerow(
-            [
-                mS,
-                sintheta,
-                lh,
-                Ap,
-                muhsq,
-                muSsq,
-                f,
-                strength,
-                strength_1d,
-                strength_Tc,
-                Tc,
-                Tnuc,
-                Tnuc_1d,
-                beta_H,
-                beta_H_1d,
-            ]
-        )
-        print("mS = " + str(mS) + ", sin theta = " + str(sintheta) + " scanning done.")
-        print("PT strength: " + str(strength))
+        try:
+            md.find_Tn()
+            strength_1d = md.strength_Tn_1d()
+            strength = md.strength_Tn()
+            strength_Tc = md.strength_Tc
+            Tc = md.Tc
+            Tnuc = md.Tn
+            Tnuc_1d = md.Tn1d
+            beta_H = md.beta_over_H()
+            beta_H_1d = md.beta_over_H_1d()
+            data_writer.writerow(
+                [
+                    mS,
+                    sintheta,
+                    md.lh,
+                    md.A,
+                    md.muHsq,
+                    md.muSsq,
+                    md.f,
+                    strength_Tc,
+                    Tc,
+                    strength,
+                    strength_1d,
+                    Tnuc,
+                    Tnuc_1d,
+                    beta_H,
+                    beta_H_1d,
+                ]
+            )
+            print(
+                "mS = " + str(mS) + ", sin theta = " + str(sintheta) + " scanning done."
+            )
+            print("PT strength: " + str(strength))
+        except:
+            Tc = md.Tc
+            strength_Tc = md.strength_Tc
+            data_writer.writerow(
+                [
+                    mS,
+                    sintheta,
+                    md.lh,
+                    md.A,
+                    md.muHsq,
+                    md.muSsq,
+                    md.f,
+                    strength_Tc,
+                    Tc,
+                ]
+            )
+            continue

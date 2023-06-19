@@ -266,7 +266,7 @@ class model_ALP(gp.generic_potential):
         T_test = (Tmax + Tmin) * 0.5
         print("Finding Tc...")
         for i in range(num_i + 10):
-            h_range = np.linspace(0, 200, 200)
+            h_range = np.linspace(0, 300, 300)
             V_range = np.array([self.Vmin(i, T_test) for i in h_range])
             V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
             xmin = optimize.fmin(V1dinter, 60, disp=False)[0]
@@ -351,13 +351,17 @@ class model_ALP(gp.generic_potential):
         if self.Tn1d == None:
             self.find_Tn_1d()
         if self.mS <= 0.05:
-            Tmax = self.Tn1d - 0.05
+            Tmax = self.Tn1d - 0.1
+            eps = 0.002
         elif self.mS <= 1:
-            Tmax = self.Tn1d - 0.01
+            Tmax = self.Tn1d - 0.02
+            eps = 0.002
         elif self.mS <= 2:
             Tmax = self.Tn1d
+            eps = 0.003
         else:
             Tmax = self.Tc - 0.01
+            eps = 0.005
 
         eps = 0.002
 
@@ -517,7 +521,7 @@ class model_ALP(gp.generic_potential):
             self.getTc()
         assert T < self.Tc
         fv = 1e-16
-        h_range = np.linspace(-1.3 * self.Tcvev, 1.3 * self.Tcvev, 200)
+        h_range = np.linspace(-2.0 * self.Tcvev, 2.0 * self.Tcvev, 300)
         V_range = np.array([self.Vmin(i, T) for i in h_range])
         V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
         tv = optimize.fmin(V1dinter, self.Tcvev, disp=False)[0]
@@ -538,11 +542,13 @@ class model_ALP(gp.generic_potential):
             self.getTc()
         if self.mS <= 0.05:
             Tmax = self.Tc - 0.05
+            eps = 0.002
         elif self.mS <= 1:
             Tmax = self.Tc - 0.02
+            eps = 0.002
         else:
             Tmax = self.Tc - 0.01
-        eps = 0.002
+            eps = 0.005
         list = []
         for i in range(0, 1000):
             Ttest = Tmax - i * eps
