@@ -33,22 +33,25 @@ yt = 0.9777726923522626
 
 class model_ALP(gp.generic_potential):
     """
-    Class of CosmoTransitions. Input parameters are the 1-loop renormalized
-    parameters (but not the directly-observed quantites such as mixing angle or mass).
+    Class of CosmoTransitions.
+
+    Effective potential of the model,
+    and some defined functions for computations.
+
+    Input parameters are the observed mS and mixing angle,
+    plus the 1-loop MSbar renormalized quantities.
 
     Parameters include:
     lh: Higgs quartic coupling.
     A: Higgs-ALP coupling.
     muHsq: Higgs mass term squared.
     muSsq: ALP mass term squared.
-    f: scale parameter for the ALP, i.e. the "decay constant" of the axion. Could
-    be understood as the UV-completion scale.
-    beta: phase difference between the ALP mass term and the Higgs-ALP interaction term.
-
-    Effective potential of the model, and some defined functions for computation.
+    f: scale parameter for the ALP, i.e. the "decay constant" of the axion.
+    Could be understood as the UV-completion scale.
+    delta: phase difference.
     """
 
-    def init(self, mS, sintheta, lh, A, muHsq, muSsq, f, beta):
+    def init(self, mS, sintheta, lh, A, muHsq, muSsq, f, delta):
         self.Ndim = 2
         self.g1 = g1
         self.g2 = g2
@@ -60,7 +63,7 @@ class model_ALP(gp.generic_potential):
         self.muHsq = muHsq
         self.muSsq = muSsq
         self.f = f
-        self.beta = beta
+        self.delta = delta
         self.Tmax = 200
         self.Tmin = 20
         self.renormScaleSq = mZEW**2
@@ -84,14 +87,18 @@ class model_ALP(gp.generic_potential):
 
         # tree-level potential
         y_h = (
-            -0.5 * (self.muHsq - self.A * self.f * np.sin(self.beta)) * h**2
+            -0.5 * (self.muHsq - self.A * self.f * np.cos(self.delta)) * h**2
             + 0.25 * self.lh * h**4
         )
 
         y_S = -self.f**2 * self.muSsq * (np.cos(S / self.f) - 1)
 
         y_hS = (
-            -0.5 * self.A * self.f * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
+            -0.5
+            * self.A
+            * self.f
+            * (h**2 - 2 * v2)
+            * np.cos(-self.delta + S / self.f)
         )
 
         tot = y_h + y_S + y_hS
@@ -100,7 +107,11 @@ class model_ALP(gp.generic_potential):
 
     def boson_massSq(self, X, T):
         """
-        Method of CosmoTransitions. Returns bosons mass square, dof and constants. The scalar masses are the eigenvalues of the full physical scalar matrix, plus the Nambu-Goldstone bosons.
+        Method of CosmoTransitions.
+        Returns bosons mass square, dof and constants.
+        The scalar masses are the eigenvalues of the
+        full physical scalar matrix,
+        plus the Nambu-Goldstone bosons.
         """
 
         X = np.array(X)
@@ -113,8 +124,8 @@ class model_ALP(gp.generic_potential):
         mgs = (
             self.lh * h**2
             - self.muHsq
-            - self.A * self.f * np.sin(S / self.f + self.beta)
-            + self.A * self.f * np.sin(self.beta)
+            - self.A * self.f * np.cos(S / self.f - self.delta)
+            + self.A * self.f * np.cos(self.delta)
         ) + (
             3 * self.g2**2 / 16
             + self.g1**2 / 16
@@ -126,8 +137,8 @@ class model_ALP(gp.generic_potential):
         aterm = (
             3 * self.lh * h**2
             - self.muHsq
-            - self.A * self.f * np.sin(S / self.f + self.beta)
-            + self.A * self.f * np.sin(self.beta)
+            - self.A * self.f * np.cos(S / self.f - self.delta)
+            + self.A * self.f * np.cos(self.delta)
         ) + (
             3 * self.g2**2 / 16
             + self.g1**2 / 16
@@ -135,10 +146,10 @@ class model_ALP(gp.generic_potential):
             + 0.25 * self.yt**2
         ) * T2
 
-        cterm = -self.A * h * np.cos(S / self.f + self.beta)
+        cterm = -self.A * h * np.sin(S / self.f - self.delta)
 
         bterm = 0.5 * (
-            self.A * (h**2 - 2 * v2) * np.sin(self.beta + S / self.f)
+            self.A * (h**2 - 2 * v2) * np.cos(-self.delta + S / self.f)
         ) / self.f + self.muSsq * np.cos(S / self.f)
 
         # Scalar eigenvalues
@@ -167,7 +178,8 @@ class model_ALP(gp.generic_potential):
 
     def fermion_massSq(self, X):
         """
-        Method of CosmoTransitions. Fermion mass square. Only top quark is included.
+        Method of CosmoTransitions. Fermion mass square.
+        Only top quark is included.
         """
 
         X = np.array(X)
@@ -257,8 +269,7 @@ class model_ALP(gp.generic_potential):
 
     def getTc(self):
         """
-        Find the critical temperature, using the built-in `getPhases` function
-        of cosmoTransitions.
+        Find the critical temperature, using binormial search.
         """
         num_i = 30
         Tmax = self.Tmax
@@ -266,25 +277,37 @@ class model_ALP(gp.generic_potential):
         T_test = (Tmax + Tmin) * 0.5
         print("Finding Tc...")
         for i in range(num_i + 10):
+            # Why use num_i + 10?
+            # Binormial search does not guarantee that the result
+            # at the number of iteration is higher or lower than the
+            # true value.
+            # But for us to have a v(T_c), we should perform the search
+            # at the temperature lower than the real T_c.
+            # So after enough number of iterations, we should
+            # continue searching if the current T_test is
+            # higher than T_c, until we have a lower one.
             h_range = np.linspace(0, 300, 300)
             V_range = np.array([self.Vmin(i, T_test) for i in h_range])
             V1dinter = interpolate.UnivariateSpline(h_range, V_range, s=0)
-            xmin = optimize.fmin(V1dinter, 60, disp=False)[0]
-
+            xmin = optimize.fmin(V1dinter, 200, disp=False)[0]
             if V1dinter(xmin) < V1dinter(0) and xmin > 1:
-                Tmin = T_test
-                Tnext = (Tmax + T_test) * 0.5
-                T_test = Tnext
+                # This means the current temperature is lower than T_c.
+                if i > num_i:
+                    # If enough iteration is done, stop computing.
+                    self.Tc = T_test
+                    self.Tcvev = xmin
+                    self.strength_Tc = xmin / T_test
+                    break
+                else:
+                    # Not enough iteration, continue to compute.
+                    Tmin = T_test
+                    Tnext = (Tmax + T_test) * 0.5
+                    T_test = Tnext
             else:
+                # Current temperature is higher than T_c.
                 Tmax = T_test
                 Tnext = (Tmin + T_test) * 0.5
                 T_test = Tnext
-            if V1dinter(xmin) < V1dinter(0) and xmin > 1.0 and i > num_i:
-                break
-
-            self.Tc = T_test
-            self.Tcvev = xmin
-            self.strength_Tc = xmin / T_test
 
     def tunneling_at_T(self, T):
         """
@@ -347,20 +370,23 @@ class model_ALP(gp.generic_potential):
         Trace the evolution of the 3d Euclidean action S_3/T as temperature
         cooling down.
         Stores in self.action_trace_data.
+        Note: the Tmax and eps can be modified according to what you want.
+        Usually this requires some test running.
+        There is no general way to get a Tmax and eps automatically.
         """
-        if self.Tn1d == None:
+        if self.Tn1d is None:
             self.find_Tn_1d()
         if self.mS <= 0.05:
-            Tmax = self.Tn1d - 0.1
+            Tmax = self.Tn1d - 0.45
             eps = 0.002
         elif self.mS <= 1:
-            Tmax = self.Tn1d - 0.02
+            Tmax = self.Tn1d - 0.2
             eps = 0.002
         elif self.mS <= 2:
-            Tmax = self.Tn1d
+            Tmax = self.Tn1d - 0.15
             eps = 0.003
         else:
-            Tmax = self.Tc - 0.01
+            Tmax = self.Tn1d - 0.01
             eps = 0.005
 
         eps = 0.002
@@ -446,35 +472,6 @@ class model_ALP(gp.generic_potential):
         ) / (12.0 * eps)
         return dev * Tnuc
 
-    def alpha(self):
-        """
-        Compute the \alpha quantity at Tn.
-        """
-        if not self.Tn:
-            self.find_Tn()
-        Tnuc = self.Tn
-        if self.Tc - Tnuc >= 0.002:
-            eps = 0.001
-        else:
-            eps = 0.0001
-
-        def deltaV(T):
-            falsev = self.false_vev(T)
-            truev = self.true_vev(T)
-            return self.Vtot(falsev, T) - self.Vtot(truev, T)
-
-        dev = (
-            deltaV(Tnuc - 2 * eps)
-            - 8.0 * deltaV(Tnuc - eps)
-            + 8.0 * deltaV(Tnuc + eps)
-            - deltaV(Tnuc + 2.0 * eps)
-        ) / (
-            12.0 * eps
-        )  # derivative of deltaV w.r.t T at Tn
-        latent = deltaV(Tnuc) - 0.25 * Tnuc * dev
-        rho_crit = np.pi**2 * 106.75 * Tnuc**4 / 30.0
-        return latent / rho_crit
-
     """
     So far we finished computing everything.
     But for comparison, we need to compute the `1d` phase
@@ -484,10 +481,10 @@ class model_ALP(gp.generic_potential):
     def Vmin(self, h, T):
         T2 = T**2
         # Write down the high-T expanded one as the initial guess.
-        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.cos(self.beta)
+        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.sin(self.delta)
         den = 6 * self.f * self.muSsq + self.A * (
             3 * (h**2 - 2 * v**2) + T2
-        ) * np.sin(self.beta)
+        ) * np.cos(self.delta)
         highT_path = self.f * np.arctan(num / den)
         y = optimize.minimize(
             self.Vtot,
@@ -501,10 +498,10 @@ class model_ALP(gp.generic_potential):
     def Smin(self, h, T):
         T2 = T**2
         # Write down the high-T expanded one as the initial guess.
-        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.cos(self.beta)
+        num = self.A * (3 * (h**2 - 2 * v**2) + T2) * np.sin(self.delta)
         den = 6 * self.f * self.muSsq + self.A * (
             3 * (h**2 - 2 * v**2) + T2
-        ) * np.sin(self.beta)
+        ) * np.cos(self.delta)
         highT_path = self.f * np.arctan(num / den)
         y = optimize.minimize(
             self.Vtot,

@@ -1,5 +1,12 @@
 {
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
-    "python.linting.banditEnabled": false
+    "python.linting.banditEnabled": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none",
+    "files.associations": {
+        "ostream": "cpp"
+    }
 }
