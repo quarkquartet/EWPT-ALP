@@ -26,7 +26,7 @@ if Tc_flag == "Tc":
             muhsq = float(point[4])
             muSsq = float(point[5])
             f = float(point[6])
-            md = model(mS, sintheta, lh, Ap, muhsq, muSsq, f, np.pi / 5)
+            md = model(mS, sintheta, lh, Ap, muhsq, muSsq, f, np.pi / 20)
             print(
                 "Scanning mS = "
                 + str(md.mS)
