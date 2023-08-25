@@ -149,7 +149,7 @@ class model_ALP(gp.generic_potential):
         cterm = -self.A * h * np.sin(S / self.f - self.delta)
 
         bterm = 0.5 * (
-            self.A * (h**2 - 2 * v2) * np.cos(-self.delta + S / self.f)
+            self.A * (h**2 - 2 * v2 + T2 / 3) * np.cos(-self.delta + S / self.f)
         ) / self.f + self.muSsq * np.cos(S / self.f)
 
         # Scalar eigenvalues
