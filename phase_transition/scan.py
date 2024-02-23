@@ -1,13 +1,18 @@
 import csv
-import numpy as np
-from ALP import model_ALP as model
 import sys
 
+import numpy as np
+from ALP import model_ALP as model
 
 param_file = sys.argv[1]
 output_file = sys.argv[2]
 
 Tc_flag = sys.argv[3]
+pi_factor = float(sys.argv[4])
+
+print("Parameter file: " + param_file)
+print("Output file: " + output_file)
+print("delta: " + str(pi_factor) + " * pi.")
 
 dataset = []
 with open(param_file) as csv_file:
@@ -26,7 +31,13 @@ if Tc_flag == "Tc":
             muhsq = float(point[4])
             muSsq = float(point[5])
             f = float(point[6])
-            md = model(mS, sintheta, lh, Ap, muhsq, muSsq, f, 2 * np.pi / 5)
+            if len(point) > 7:
+                Vdiff = float(point[7])
+                eEDM = float(point[8])
+                nEDM = float(point[9])
+                if Vdiff <= 0:
+                    continue
+            md = model(mS, sintheta, lh, Ap, muhsq, muSsq, f, np.pi * pi_factor)
             print(
                 "Scanning mS = "
                 + str(md.mS)
@@ -58,6 +69,8 @@ if Tc_flag == "Tc":
                     md.f,
                     strength_Tc,
                     Tc,
+                    eEDM,
+                    nEDM,
                 ]
             )
             print(

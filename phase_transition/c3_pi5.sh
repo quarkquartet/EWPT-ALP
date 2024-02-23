@@ -1,0 +1,2 @@
+python scan.py ../model_setup/output/c3_delta_pi5_GeV_param.csv output/c3_delta_pi5_GeV_out.csv Tc 0.2
+python scan.py ../model_setup/output/c3_delta_pi5_MeV_param.csv output/c3_delta_pi5_MeV_out.csv Tc 0.2
